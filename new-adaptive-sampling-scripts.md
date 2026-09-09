@@ -29,4 +29,26 @@ ls -lh summed-reads/
 -rw-r-----. 1 bakerjo bakerjo 64G Jul 13 09:41 channels_257_512.pod5
 ```
 
+### If you need to split by channel after basecalling to fastq, here is a script to do so:
+```bash
+awk '
+NR % 4 == 1 {
+    ch = ""
+    for (i = 1; i <= NF; i++) {
+        if ($i ~ /^ch:i:/) {
+            split($i, a, ":")
+            ch = a[3]
+            break
+        }
+    }
 
+    if (ch >= 1 && ch <= 256)
+        out = "channels_1_256.fastq"
+    else if (ch >= 257 && ch <= 512)
+        out = "channels_257_512.fastq"
+}
+{
+    print >> out
+}
+' input.fastq
+```
