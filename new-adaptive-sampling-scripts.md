@@ -29,26 +29,26 @@ ls -lh summed-reads/
 -rw-r-----. 1 bakerjo bakerjo 64G Jul 13 09:41 channels_257_512.pod5
 ```
 
-### If you need to split by channel after basecalling to fastq, here is a script to do so:
-```bash
-awk '
-NR % 4 == 1 {
-    ch = ""
-    for (i = 1; i <= NF; i++) {
-        if ($i ~ /^ch:i:/) {
-            split($i, a, ":")
-            ch = a[3]
-            break
-        }
-    }
+## Using Myloasm instead of Flye for genome assembly
+Myloasm is a recently developed assembler designed specifically for long-read sequencing data. In the authors’ benchmarks of real Oxford Nanopore metagenomes, Myloasm recovered approximately three times as many complete circular contigs as the next-best assembler tested.
 
-    if (ch >= 1 && ch <= 256)
-        out = "channels_1_256.fastq"
-    else if (ch >= 257 && ch <= 512)
-        out = "channels_257_512.fastq"
-}
-{
-    print >> out
-}
-' input.fastq
+Shaw, J., Marin, M.G. & Li, H. High-resolution metagenome assembly for modern long reads with myloasm. _Nat Biotechnol_ (2026). https://doi.org/10.1038/s41587-026-03053-z
+
+## 6-Select circular contigs from the Myloasm assembly
+The ```assembly_primary.fa``` file is the main output contig file produced by Myloasm and is the file that should usually be used for downstream analysis.
+
+In Myloasm, confidently circular contigs are labeled directly in the FASTA header as:
+
+_circular-yes_
+
+
+
+```bash
+# Extract all contigs labeled circular-yes
+seqkit grep \
+-n \
+-r \
+-p '_circular-yes_'\
+assembly_primary.fa > contigs_closed.fa
 ```
+
